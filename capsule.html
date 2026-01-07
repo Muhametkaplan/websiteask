@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Zaman Kapsülü ⏳</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .capsule { padding: 15px; border-radius: 10px; margin-top: 10px; position: relative; }
+        .locked { background: #eceff1; border: 1px solid #cfd8dc; color: #78909c; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .unlocked { background: #e8f5e9; border: 1px solid #a5d6a7; color: #2e7d32; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Zaman Kapsülü ⏳</h2>
+        <p class="subtitle">Geleceğe bir not bırak...</p>
+
+        <div class="box-style">
+            <textarea id="cMsg" rows="3" placeholder="Gelecekteki bize bir mesaj yaz..."></textarea>
+            <label style="display:block; text-align:left; margin-top:10px; font-size:0.8rem; color:#666;">Ne zaman açılsın?</label>
+            <input type="date" id="cDate">
+            <button class="btn-main" onclick="addCapsule()" style="background:#2ecc71;">Kapsüle Kilitle 🔒</button>
+        </div>
+
+        <div id="capsule-list"></div>
+    </div>
+
+    <div class="navbar">
+        <a href="../index.html" class="nav-link"><i class="fas fa-home"></i></a>
+        <a href="#" class="nav-link active"><i class="fas fa-hourglass-half"></i></a>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="../js/config.js"></script>
+    <script>
+        firebase.initializeApp(window.APP_CONFIG.FIREBASE);
+        const db = firebase.database();
+        const capRef = db.ref('capsules');
+
+        function addCapsule() {
+            const msg = document.getElementById('cMsg').value;
+            const date = document.getElementById('cDate').value;
+            if(!msg || !date) return alert("Mesaj ve Tarih gerekli!");
+            
+            capRef.push({ msg: msg, date: date });
+            document.getElementById('cMsg').value = "";
+        }
+
+        capRef.on('value', s => {
+            const list = document.getElementById('capsule-list');
+            list.innerHTML = "";
+            const today = new Date().toISOString().split('T')[0];
+
+            if(s.val()) {
+                Object.entries(s.val()).forEach(([key, val]) => {
+                    let html = "";
+                    if(val.date > today) {
+                        html = `<div class="capsule locked"><i class="fas fa-lock"></i> ${val.date} tarihine kadar gizli</div>`;
+                    } else {
+                        html = `<div class="capsule unlocked">🔓 <b>Açıldı:</b><br>${val.msg}</div>`;
+                    }
+                    list.innerHTML += `<div style="position:relative">${html}<div class="delete-btn" onclick="del('${key}')">✕</div></div>`;
+                });
+            }
+        });
+
+        function del(key) { if(confirm("Kapsülü yok etmek istiyor musun?")) db.ref('capsules/'+key).remove(); }
+    </script>
+</body>
+</html>

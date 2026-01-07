@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sanat Terapisi 🎨</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Birlikte Çizim 🎨</h2>
+        <p>Sen çiz, o görsün!</p>
+        
+        <div class="box-style">
+            <input type="color" id="colorPicker" value="#000000">
+            <input type="range" id="brushSize" min="1" max="20" value="3">
+            <button class="btn-main" onclick="clearCanvas()" style="background:#95a5a6; margin-top:10px;">Temizle</button>
+            <div style="border:2px dashed #ccc; height:350px; margin-top:10px; overflow:hidden;" id="canvas-div">
+                <canvas id="canvas" width="300" height="350"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="navbar">
+        <a href="../index.html" class="nav-link"><i class="fas fa-home"></i></a>
+        <a href="#" class="nav-link active"><i class="fas fa-paint-brush"></i></a>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="../js/config.js"></script>
+    <script>
+        firebase.initializeApp(window.APP_CONFIG.FIREBASE);
+        const db = firebase.database();
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const container = document.getElementById('canvas-div');
+        
+        // Boyutu ayarla
+        canvas.width = container.offsetWidth;
+        canvas.height = container.offsetHeight;
+
+        let painting = false;
+        function start(e) { painting = true; draw(e); }
+        function end() { painting = false; ctx.beginPath(); }
+        function draw(e) {
+            if(!painting) return;
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+            const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+            const color = document.getElementById('colorPicker').value;
+            const size = document.getElementById('brushSize').value;
+            
+            db.ref('draw').push({x, y, color, size});
+        }
+
+        canvas.addEventListener('mousedown', start); canvas.addEventListener('mouseup', end); canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('touchstart', start); canvas.addEventListener('touchend', end); canvas.addEventListener('touchmove', draw);
+
+        db.ref('draw').on('child_added', s => {
+            const d = s.val();
+            ctx.lineWidth = d.size;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = d.color;
+            ctx.lineTo(d.x, d.y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(d.x, d.y);
+        });
+
+        function clearCanvas() { db.ref('draw').set(null); ctx.clearRect(0,0,canvas.width, canvas.height); ctx.beginPath(); }
+        db.ref('draw').on('value', s => { if(!s.val()) { ctx.clearRect(0,0,canvas.width, canvas.height); ctx.beginPath(); }});
+    </script>
+</body>
+</html>

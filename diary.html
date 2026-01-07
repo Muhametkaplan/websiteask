@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bugün Biz 📔</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>İlişki Günlüğü 📔</h2>
+        <p class="subtitle">Her güne bir not...</p>
+
+        <div class="box-style">
+            <textarea id="diaryInput" rows="3" placeholder="Bugün neler hissettin? (Örn: Seni çok özledim...)"></textarea>
+            <button class="btn-main" onclick="addNote()">Kaydet 💾</button>
+        </div>
+
+        <div id="diary-list" style="padding-bottom: 20px;">
+            </div>
+    </div>
+
+    <div class="navbar">
+        <a href="../index.html" class="nav-link"><i class="fas fa-home"></i></a>
+        <a href="#" class="nav-link active"><i class="fas fa-book-open"></i></a>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="../js/config.js"></script>
+    <script>
+        firebase.initializeApp(window.APP_CONFIG.FIREBASE);
+        const db = firebase.database();
+        const diaryRef = db.ref('diary');
+
+        function addNote() {
+            const text = document.getElementById('diaryInput').value;
+            if(!text) return alert("Boş not olmaz!");
+            
+            const today = new Date();
+            const dateStr = today.toLocaleDateString('tr-TR') + ' ' + today.toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
+            
+            diaryRef.push({
+                text: text,
+                date: dateStr,
+                timestamp: Date.now()
+            });
+            document.getElementById('diaryInput').value = "";
+        }
+
+        diaryRef.on('value', snapshot => {
+            const list = document.getElementById('diary-list');
+            list.innerHTML = "";
+            const data = snapshot.val();
+            
+            if(data) {
+                // Yeniden eskiye sırala
+                const entries = Object.entries(data).sort((a,b) => b[1].timestamp - a[1].timestamp);
+                
+                entries.forEach(([key, val]) => {
+                    list.innerHTML += `
+                        <div class="note-card">
+                            <div class="delete-btn" onclick="deleteNote('${key}')"><i class="fas fa-trash"></i></div>
+                            <small style="color:#f57f17; font-weight:bold;">${val.date}</small><br>
+                            ${val.text}
+                        </div>
+                    `;
+                });
+            } else {
+                list.innerHTML = "<p style='color:#ccc'>Henüz hiç anı yazılmamış...</p>";
+            }
+        });
+
+        function deleteNote(key) {
+            if(confirm("Silmek istediğine emin misin?")) db.ref('diary/'+key).remove();
+        }
+    </script>
+</body>
+</html>

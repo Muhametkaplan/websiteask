@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sinemamız 🎬</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .movie-card { background: #ffebee; padding: 15px; border-radius: 15px; margin-top: 10px; display: flex; align-items: center; gap: 15px; border: 1px dashed #ef5350; text-align: left; position: relative; }
+        .movie-icon { font-size: 2rem; color: #ef5350; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Bizim Sinemamız 🍿</h2>
+        <p class="subtitle">İzlediğimiz filmler ve anılar...</p>
+
+        <div class="box-style">
+            <input type="text" id="mName" placeholder="Film Adı">
+            <input type="text" id="mNote" placeholder="O anki anımız (Örn: Çok ağlamıştık)">
+            <button class="btn-main" onclick="addMovie()" style="background:#e74c3c;">Listeye Ekle 🎬</button>
+        </div>
+
+        <div id="movie-list"></div>
+    </div>
+
+    <div class="navbar">
+        <a href="../index.html" class="nav-link"><i class="fas fa-home"></i></a>
+        <a href="#" class="nav-link active"><i class="fas fa-film"></i></a>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="../js/config.js"></script>
+    <script>
+        firebase.initializeApp(window.APP_CONFIG.FIREBASE);
+        const db = firebase.database();
+        const movieRef = db.ref('movies');
+
+        function addMovie() {
+            const name = document.getElementById('mName').value;
+            const note = document.getElementById('mNote').value;
+            if(!name) return alert("Film adı yazmalısın!");
+            
+            movieRef.push({ title: name, note: note });
+            document.getElementById('mName').value = "";
+            document.getElementById('mNote').value = "";
+        }
+
+        movieRef.on('value', s => {
+            const list = document.getElementById('movie-list');
+            list.innerHTML = "";
+            if(s.val()) {
+                Object.entries(s.val()).forEach(([key, val]) => {
+                    list.innerHTML += `
+                        <div class="movie-card">
+                            <div class="delete-btn" onclick="del('${key}')"><i class="fas fa-trash"></i></div>
+                            <i class="fas fa-film movie-icon"></i>
+                            <div>
+                                <b>${val.title}</b><br>
+                                <small style="color:#666">${val.note}</small>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                list.innerHTML = "<p style='color:#ccc'>Liste boş...</p>";
+            }
+        });
+
+        function del(key) { if(confirm("Silinsin mi?")) db.ref('movies/'+key).remove(); }
+    </script>
+</body>
+</html>

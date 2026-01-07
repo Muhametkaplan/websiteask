@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ana Sayfa ❤️</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="css/style.css">
+    
+    <style>
+        /* Cine-AI Stilleri */
+        .genre-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px; }
+        .genre-btn { background: white; border: 1px solid var(--tech); color: var(--tech); padding: 8px 15px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; transition: 0.2s; }
+        .genre-btn:hover, .genre-btn.active { background: var(--tech); color: white; transform: scale(1.05); }
+        .expand-btn { background: none; border: none; color: #888; font-size: 0.9rem; cursor: pointer; margin-top: 15px; text-decoration: underline; display: block; width: 100%; }
+        .hidden-genres { display: none; margin-top: 10px; border-top: 1px dashed #eee; padding-top: 10px; }
+        .ai-result-box { margin-top: 20px; padding: 20px; background: #2d3436; color: #dfe6e9; border-radius: 10px; font-size: 0.9rem; min-height: 80px; text-align: left; display: none; line-height: 1.6; }
+        
+        /* Kavanoz Notu */
+        #jar-note { 
+            display: none; /* Başlangıçta gizli */
+            background: #fffde7; 
+            padding: 15px; 
+            margin-top: 15px; 
+            border-radius: 10px; 
+            font-family: 'Dancing Script', cursive; 
+            font-size: 1.4rem; 
+            color: #555; 
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+            transform: rotate(-2deg);
+            border: 1px solid #f9a825;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="timer-box">
+            <div style="font-size:0.8rem; opacity:0.9; margin-bottom:10px; letter-spacing: 2px;">BİRLİKTELİĞİMİZ</div>
+            <div id="timer">Yükleniyor...</div>
+        </div>
+
+        <div class="menu-grid">
+            <a href="pages/games.html" class="menu-item"><i class="fas fa-gamepad"></i>Oyunlar</a>
+            <a href="pages/coupons.html" class="menu-item"><i class="fas fa-ticket-alt"></i>Kuponlar</a>
+            <a href="pages/therapy.html" class="menu-item"><i class="fas fa-paint-brush"></i>Sanat Terapisi</a>
+            <a href="pages/diary.html" class="menu-item"><i class="fas fa-book-open"></i>Bugün Biz</a>
+            <a href="pages/capsule.html" class="menu-item"><i class="fas fa-hourglass-half"></i>Geleceğe Mesaj</a>
+            <a href="pages/cinema.html" class="menu-item"><i class="fas fa-film"></i>Sinemamız</a>
+        </div>
+
+        <div class="box-style">
+            <h3>🗺️ Bizim Haritamız</h3>
+            <p style="font-size:0.8rem; color:#888;">Gezdiğimiz yerlere kalp bırak! ❤️</p>
+            <div id="map"></div>
+            <button class="btn-main" onclick="clearMap()" style="background:#95a5a6; font-size:0.8rem;">Temizle</button>
+        </div>
+
+        <div class="box-style">
+            <h3 style="color:#d63384;">💌 Sevgi Kavanozu</h3>
+            <div id="jar-icon" style="font-size:4rem; margin:10px; transition: transform 0.5s;">🫙</div>
+            <div id="jar-note"></div> <button class="btn-main" onclick="pickReason()">Bir Not Çek ✨</button>
+        </div>
+
+        <div class="box-style">
+            <h3 style="color:var(--tech);">🤖 Cine-AI</h3>
+            <p style="font-size:0.8rem; color:#888;">Hangi tür film istersin?</p>
+            
+            <div class="genre-grid">
+                <button class="genre-btn" onclick="selectGenre(this, 'Romantik')">💘 Romantik</button>
+                <button class="genre-btn" onclick="selectGenre(this, 'Komedi')">😂 Komedi</button>
+                <button class="genre-btn" onclick="selectGenre(this, 'Korku')">👻 Korku</button>
+                <button class="genre-btn" onclick="selectGenre(this, 'Bilim Kurgu')">👽 Bilim Kurgu</button>
+                <button class="genre-btn" onclick="selectGenre(this, 'Animasyon')">🦄 Animasyon</button>
+            </div>
+
+            <div id="all-genres" class="hidden-genres">
+                <div class="genre-grid">
+                    <button class="genre-btn" onclick="selectGenre(this, 'Aksiyon')">💥 Aksiyon</button>
+                    <button class="genre-btn" onclick="selectGenre(this, 'Dram')">🎭 Dram</button>
+                    <button class="genre-btn" onclick="selectGenre(this, 'Gerilim')">😬 Gerilim</button>
+                    <button class="genre-btn" onclick="selectGenre(this, 'Gizem')">🔍 Gizem</button>
+                    <button class="genre-btn" onclick="selectGenre(this, 'Macera')">🌍 Macera</button>
+                    <button class="genre-btn" onclick="selectGenre(this, 'Polisiye')">👮 Polisiye</button>
+                    <button class="genre-btn" onclick="selectGenre(this, 'Suç')">⚖️ Suç</button>
+                    <button class="genre-btn" onclick="selectGenre(this, 'Belgesel')">🎥 Belgesel</button>
+                    <button class="genre-btn" onclick="selectGenre(this, 'Fantastik')">🐉 Fantastik</button>
+                    <button class="genre-btn" onclick="selectGenre(this, 'Müzikal')">💃 Müzikal</button>
+                    <button class="genre-btn" onclick="selectGenre(this, 'Tarih')">📜 Tarih</button>
+                    <button class="genre-btn" onclick="selectGenre(this, 'Savaş')">⚔️ Savaş</button>
+                    <button class="genre-btn" onclick="selectGenre(this, 'Western')">🤠 Western</button>
+                    <button class="genre-btn" onclick="selectGenre(this, 'Biyografi')">✍️ Biyografi</button>
+                    <button class="genre-btn" onclick="selectGenre(this, 'Spor')">⚽ Spor</button>
+                </div>
+            </div>
+            <button class="expand-btn" onclick="toggleGenres()">Daha Fazla Tür Göster 👇</button>
+
+            <p style="font-size:0.8rem; margin:15px 0 5px 0; font-weight:600; text-align:left;">Nasıl Hissediyorsun?</p>
+            <input type="text" id="ai-mood" placeholder="Örn: Biraz duygusalım, ağlamak istiyorum...">
+            
+            <button class="btn-main" onclick="askAI()" style="background:var(--tech);">Bana Film Öner 🎬</button>
+            <div id="ai-result" class="ai-result-box"></div>
+        </div>
+
+        <a href="https://wa.me/905524185530?text=Acil%20sarılmana%20ihtiyacım%20var%20🥺" class="btn-main" style="background:#25D366; display:block; text-decoration:none; margin-top:20px; color:white;">
+            <i class="fab fa-whatsapp"></i> Acil Sarılma Butonu
+        </a>
+        <br><br>
+    </div>
+
+    <div class="navbar">
+        <a href="#" class="nav-link active"><i class="fas fa-home"></i></a>
+        <a href="pages/games.html" class="nav-link"><i class="fas fa-gamepad"></i></a>
+        <a href="pages/diary.html" class="nav-link"><i class="fas fa-book"></i></a>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="js/config.js"></script>
+    
+    <script>
+        firebase.initializeApp(window.APP_CONFIG.FIREBASE);
+        const db = firebase.database();
+
+        // 1. SAYAÇ
+        function updateFullTimer() {
+            const now = new Date();
+            const diff = now - window.APP_CONFIG.START_DATE;
+            const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const m = Math.floor((diff / (1000 * 60)) % 60);
+            const s = Math.floor((diff / 1000) % 60);
+            document.getElementById('timer').innerHTML = `
+                <div><b>${d}</b><span></span></div> : <div><b>${h}</b><span></span></div> :
+                <div><b>${m}</b><span></span></div> : <div><b>${s}</b><span></span></div>`;
+        }
+        setInterval(updateFullTimer, 1000); updateFullTimer();
+
+        // 2. HARİTA (Kalpli)
+        var map = L.map('map').setView([39.0, 35.0], 5);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        const heartIcon = L.divIcon({ className: 'heart-marker', html: '❤️', iconSize: [30, 30], iconAnchor: [15, 15] });
+        const heartsRef = db.ref('hearts');
+        heartsRef.on('value', s => {
+            map.eachLayer(l => {if(l instanceof L.Marker) map.removeLayer(l)});
+            if(s.val()) Object.values(s.val()).forEach(p => L.marker([p.lat, p.lng], {icon: heartIcon}).addTo(map));
+        });
+        map.on('click', e => heartsRef.push({lat: e.latlng.lat, lng: e.latlng.lng}));
+        function clearMap(){ if(confirm("Temizlensin mi?")) heartsRef.set(null); }
+
+        // 3. SEVGİ KAVANOZU
+        const jarReasons = [
+            "Gülüşünle günümü aydınlatıyorsun.", "Bana her zaman güç veriyorsun.", "Seninleyken zaman duruyor.",
+            "Gözlerinin içi gülüyor.", "Sesin en sevdiğim melodi.", "Beni her halimle seviyorsun.",
+            "Birlikte saçmalayabiliyoruz.", "Dünyanın en iyi sarılanısın.", "Varlığın huzur veriyor.",
+            "Seni her gördüğümde kalbim çarpıyor.", "Benim en iyi arkadaşımsın.", "Kötü günlerimde yanımdasın.",
+            "Birlikteyken çok eğleniyoruz.", "Bana kendimi özel hissettiriyorsun.", "Gelecek hayallerimin başrolüsün."
+        ];
+        function pickReason() {
+            const jar = document.getElementById('jar-icon');
+            const note = document.getElementById('jar-note');
+            
+            // Animasyon sıfırlama
+            jar.style.transform = "rotate(0deg)";
+            setTimeout(() => jar.style.transform = "rotate(20deg)", 100);
+            setTimeout(() => jar.style.transform = "rotate(-20deg)", 300);
+            setTimeout(() => jar.style.transform = "rotate(0deg)", 500);
+
+            // Not seçimi
+            const randomReason = jarReasons[Math.floor(Math.random() * jarReasons.length)];
+            note.style.display = 'block';
+            note.innerHTML = `✨ ${randomReason} ✨`;
+        }
+
+        // 4. CINE-AI (GELİŞMİŞ)
+        let selectedGenre = "";
+        function selectGenre(btn, genre) {
+            document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedGenre = genre;
+        }
+        function toggleGenres() {
+            const div = document.getElementById('all-genres');
+            const btn = document.querySelector('.expand-btn');
+            if(div.style.display === 'block') { div.style.display = 'none'; btn.innerText = "Daha Fazla Tür Göster 👇"; }
+            else { div.style.display = 'block'; btn.innerText = "Gizle 👆"; }
+        }
+        async function askAI() {
+            const mood = document.getElementById('ai-mood').value;
+            const resBox = document.getElementById('ai-result');
+            if(!selectedGenre) { alert("Lütfen bir tür seç!"); return; }
+            
+            resBox.style.display = 'block';
+            resBox.innerHTML = "🧠 Gemini Düşünüyor...";
+            
+            const prompt = `Film önerisi. Tür: ${selectedGenre}. His: ${mood}. Sadece 1 film. Format: [AD]|[KONU]|[NEDEN]`;
+            try {
+                const req = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${window.APP_CONFIG.GEMINI_KEY}`, {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({contents:[{parts:[{text: prompt }]}]})
+                });
+                const data = await req.json();
+                const parts = data.candidates[0].content.parts[0].text.split('|');
+                if(parts.length >= 3) {
+                    resBox.innerHTML = `<strong style='color:#74b9ff; font-size:1.2rem; display:block; margin-bottom:10px;'>🎬 ${parts[0]}</strong><span class='ai-tag'>📜 Konu:</span> ${parts[1]}<br><br><span class='ai-tag'>❤️ Neden:</span> ${parts[2]}`;
+                } else { resBox.innerHTML = parts[0]; }
+            } catch(e) { resBox.innerText = "Hata oluştu."; }
+        }
+    </script>
+</body>
+</html>
