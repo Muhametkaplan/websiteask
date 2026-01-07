@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Zaman Kapsülü ⏳</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="style.css">
     <style>
         .capsule { padding: 15px; border-radius: 10px; margin-top: 10px; position: relative; }
         .locked { background: #eceff1; border: 1px solid #cfd8dc; color: #78909c; display: flex; align-items: center; justify-content: center; gap: 10px; }
@@ -28,13 +28,13 @@
     </div>
 
     <div class="navbar">
-        <a href="../index.html" class="nav-link"><i class="fas fa-home"></i></a>
+        <a href="index.html" class="nav-link"><i class="fas fa-home"></i></a>
         <a href="#" class="nav-link active"><i class="fas fa-hourglass-half"></i></a>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <script src="../js/config.js"></script>
+    <script src="config.js"></script>
     <script>
         firebase.initializeApp(window.APP_CONFIG.FIREBASE);
         const db = firebase.database();
@@ -70,4 +70,5 @@
         function del(key) { if(confirm("Kapsülü yok etmek istiyor musun?")) db.ref('capsules/'+key).remove(); }
     </script>
 </body>
+
 </html>
