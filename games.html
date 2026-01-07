@@ -5,26 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Oyunlar 🎮</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="style.css">
     
     <style>
-        /* GENEL OYUN STİLLERİ */
         .games-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
         .game-card-btn { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 120px; }
         .game-card-btn i { font-size: 2.5rem; margin-bottom: 10px; color: var(--primary); }
         .game-wrapper { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: var(--bg); z-index: 2000; padding: 20px; overflow-y: auto; }
         .game-wrapper.active { display: block; animation: slideUp 0.3s ease-out; }
         .close-game-btn { position: absolute; top: 15px; right: 15px; background: #e74c3c; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; z-index: 2001; }
-
-        /* 1. XOX STYLES */
         .xox-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; max-width: 300px; margin: 20px auto; }
         .xox-cell { height: 90px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #ddd; }
-        .xox-cell.X { color: var(--primary); } 
-        .xox-cell.O { color: var(--tech); }
+        .xox-cell.X { color: var(--primary); } .xox-cell.O { color: var(--tech); }
         .mode-btn { padding: 10px 20px; border: none; border-radius: 20px; cursor: pointer; margin: 5px; font-weight: bold; }
         .mode-btn.active { background: var(--primary); color: white; }
-
-        /* 2. TKM & DİĞERLERİ */
         .rps-choice { font-size: 3rem; padding: 15px; border: 2px solid #eee; border-radius: 15px; background: white; margin: 5px; cursor: pointer; }
         .memory-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 20px; }
         .card { height: 70px; background: var(--secondary); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: transparent; cursor: pointer; transition: 0.3s; }
@@ -33,7 +27,6 @@
         .duel-tap { flex: 1; border: none; font-size: 2rem; color: white; font-weight: bold; cursor: pointer; }
         .catcher-box { height: 300px; width: 100%; background: #ffebee; border-radius: 15px; position: relative; overflow: hidden; margin-top: 20px; border: 2px dashed var(--primary); }
         .heart-target { position: absolute; font-size: 2.5rem; user-select: none; }
-
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
     </style>
 </head>
@@ -50,7 +43,7 @@
     </div>
 
     <div class="navbar">
-        <a href="../index.html" class="nav-link"><i class="fas fa-home"></i></a>
+        <a href="index.html" class="nav-link"><i class="fas fa-home"></i></a>
         <a href="#" class="nav-link active"><i class="fas fa-gamepad"></i></a>
     </div>
 
@@ -85,7 +78,7 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <script src="../js/config.js"></script>
+    <script src="config.js"></script>
     
     <script>
         firebase.initializeApp(window.APP_CONFIG.FIREBASE);
@@ -98,7 +91,7 @@
         }
         function closeGame(id) { document.getElementById('game-'+id).classList.remove('active'); }
 
-        // --- 1. XOX (BOT & WIN LOGIC EKLENDİ) ---
+        // --- 1. XOX ---
         let xoxBoard = ["", "", "", "", "", "", "", "", ""];
         let xoxActive = true;
         let xoxPlayer = "X";
@@ -134,18 +127,12 @@
 
         function handleXOXClick(index) {
             if (xoxBoard[index] !== "" || !xoxActive) return;
-
             xoxBoard[index] = xoxPlayer;
             renderXOX();
-            
             if (checkXOXWin()) return;
-
             xoxPlayer = xoxPlayer === "X" ? "O" : "X";
             document.getElementById('xox-status').innerText = "Sıra: " + xoxPlayer;
-
-            if (isBotMode && xoxPlayer === "O" && xoxActive) {
-                setTimeout(botMove, 500); // Bot biraz düşünsün
-            }
+            if (isBotMode && xoxPlayer === "O" && xoxActive) { setTimeout(botMove, 500); }
         }
 
         function botMove() {
@@ -161,33 +148,21 @@
             for (let i = 0; i < winConditions.length; i++) {
                 const [a, b, c] = winConditions[i];
                 if (xoxBoard[a] && xoxBoard[a] === xoxBoard[b] && xoxBoard[a] === xoxBoard[c]) {
-                    roundWon = true;
-                    break;
+                    roundWon = true; break;
                 }
             }
-
-            if (roundWon) {
-                document.getElementById('xox-status').innerText = `🎉 Kazanan: ${xoxPlayer}!`;
-                xoxActive = false;
-                return true;
-            }
-
-            if (!xoxBoard.includes("")) {
-                document.getElementById('xox-status').innerText = "🤝 Berabere!";
-                xoxActive = false;
-                return true;
-            }
+            if (roundWon) { document.getElementById('xox-status').innerText = `🎉 Kazanan: ${xoxPlayer}!`; xoxActive = false; return true; }
+            if (!xoxBoard.includes("")) { document.getElementById('xox-status').innerText = "🤝 Berabere!"; xoxActive = false; return true; }
             return false;
         }
 
-        // --- 2. TKM ONLINE (BASİT LOG) ---
+        // --- 2. TKM ONLINE ---
         const rpsRef = db.ref('rps_game');
         function playRPS(move) {
             const time = new Date().toLocaleTimeString();
             rpsRef.push({ move: move, time: time });
         }
         function resetRPS() { rpsRef.set(null); document.getElementById('rps-result').innerHTML = ""; }
-        
         rpsRef.on('child_added', (snapshot) => {
             const data = snapshot.val();
             const div = document.createElement('div');
@@ -197,7 +172,7 @@
             document.getElementById('rps-result').prepend(div);
         });
 
-        // --- DİĞERLERİ (HAFIZA, DÜELLO, AVCI) ---
+        // --- DİĞERLERİ ---
         const memEmojis = ['🐶','🐶','🐱','🐱','🐭','🐭','🐹','🐹','🐰','🐰','🦊','🦊'];
         function startMemory() {
             const grid = document.getElementById('memory-grid'); grid.innerHTML = '';
