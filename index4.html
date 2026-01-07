@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Senin İçin ❤️</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    
+    <style>
+        :root { --primary: #ff6b6b; --secondary: #ff9e9e; --bg: #fff0f3; --text: #4a4a4a; --white: #ffffff; --spotify: #1DB954; --tech: #6c5ce7; }
+        
+        /* --- MOBİL İÇİN KRİTİK AYARLAR --- */
+        * {
+            -webkit-tap-highlight-color: transparent; /* Mavi yanıp sönmeyi engeller */
+            outline: none; /* Tıklayınca çıkan çerçeveyi engeller */
+            box-sizing: border-box;
+        }
+
+        body { 
+            margin: 0; padding: 0; 
+            font-family: 'Poppins', sans-serif; 
+            background-color: var(--bg); color: var(--text); 
+            overflow-x: hidden; 
+            text-align: center; 
+            padding-bottom: 80px; 
+            cursor: pointer; 
+            user-select: none; /* Yazıların seçilip mavi olmasını engeller */
+            -webkit-touch-callout: none; /* iOS'ta basılı tutunca menü açılmasını engeller */
+        }
+
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; position: relative; z-index: 1; }
+        .heart-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; }
+        h1 { font-family: 'Dancing Script', cursive; font-size: 3rem; color: var(--primary); margin: 30px 0 0 0; }
+        .subtitle { font-size: 1.1rem; color: #888; margin-bottom: 20px; }
+        .box-style { background: white; padding: 25px; border-radius: 20px; margin: 30px 0; box-shadow: 0 10px 25px rgba(0,0,0,0.05); transition: transform 0.3s; }
+        .btn-main { background: var(--primary); color: white; border: none; padding: 12px 30px; border-radius: 50px; cursor: pointer; transition: 0.3s; margin-top: 10px; font-size: 1rem; box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4); }
+        .btn-main:active { transform: scale(0.95); } /* Tıklama hissi verir */
+
+        /* SAYAÇ */
+        .timer-box { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 25px; border-radius: 20px; margin: 30px 0; }
+        #timer { font-size: 1.8rem; font-weight: 600; display: flex; justify-content: center; gap: 15px; margin-top: 10px; }
+        
+        /* HARİTA */
+        #map { height: 300px; width: 100%; border-radius: 15px; margin-top: 15px; z-index: 0; border: 2px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+
+        /* OYUN ALANI */
+        .game-area { display: none; background: white; padding: 20px; border-radius: 20px; margin: 20px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .game-menu { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px; }
+        .game-tab { background: #eee; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-size: 0.9rem; border: none; transition: 0.3s; }
+        .game-tab.active { background: var(--primary); color: white; transform: scale(1.05); }
+        .single-game { display: none; animation: fadeIn 0.5s; } .single-game.active { display: block; }
+
+        /* Oyun Detayları */
+        .memory-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+        .card { background: var(--secondary); height: 60px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: transparent; transition: 0.1s; cursor: pointer; }
+        .card.flipped { background: white; border: 2px solid var(--primary); color: initial; transform: rotateY(180deg); }
+        .card.matched { background: #d4edda; border-color: #28a745; animation: pop 0.3s ease; }
+        .xox-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; max-width: 250px; margin: 0 auto; }
+        .xox-cell { background: #f8f9fa; height: 70px; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: bold; cursor: pointer; border: 2px solid #e9ecef; border-radius: 10px; }
+        .catcher-area { height: 300px; width: 100%; background: #ffebee; border-radius: 10px; position: relative; overflow: hidden; cursor: crosshair; border: 2px dashed var(--secondary); margin-top: 10px; }
+        .target-heart { position: absolute; font-size: 2rem; cursor: pointer; animation: popUp 0.5s ease-out; user-select: none; }
+        .duel-arena { display: flex; flex-direction: column; height: 300px; border-radius: 15px; overflow: hidden; position: relative; }
+        .duel-btn { flex: 1; border: none; font-size: 1.5rem; font-weight: bold; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .duel-p1 { background: #ff7675; } .duel-p2 { background: #74b9ff; }
+        .duel-score { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 10px 20px; border-radius: 20px; font-weight: bold; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+
+        /* CINE-AI & STRES TUVALİ */
+        .genre-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px; }
+        .genre-btn { background: white; border: 1px solid var(--tech); color: var(--tech); padding: 8px 15px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; transition: 0.2s; }
+        .genre-btn:hover, .genre-btn.active { background: var(--tech); color: white; transform: scale(1.05); }
+        .expand-btn { background: none; border: none; color: #888; font-size: 0.9rem; cursor: pointer; margin-top: 10px; text-decoration: underline; }
+        .hidden-genres { display: none; margin-top: 10px; border-top: 1px dashed #eee; padding-top: 10px; }
+        .ai-input { width: 90%; padding: 12px; margin-top: 15px; border: 2px solid #eee; border-radius: 12px; font-family: 'Poppins', sans-serif; font-size: 0.9rem; outline: none; }
+        .ai-result-box { margin-top: 20px; padding: 20px; background: #2d3436; color: #dfe6e9; border-radius: 10px; font-size: 0.9rem; min-height: 80px; text-align: left; display: none; line-height: 1.6; }
+        .canvas-container { position: relative; width: 100%; height: 350px; border: 2px dashed var(--tech); border-radius: 15px; overflow: hidden; background: white; cursor: crosshair; touch-action: none; }
+        canvas { display: block; width: 100%; height: 100%; }
+        .drawing-controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 10px; }
+        .tool-btn { width: 35px; height: 35px; border-radius: 50%; border: 2px solid #ddd; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; background: white; }
+        .tool-btn.active { border-color: var(--tech); background: #eee; }
+        
+        /* KUPONLAR */
+        .coupon-box-trigger { background: linear-gradient(135deg, #ff9a9e, #fecfef); color: #d63384; border: none; padding: 15px 30px; font-size: 1.1rem; border-radius: 15px; width: 100%; font-weight: bold; margin-top: 20px; cursor: pointer; }
+        .coupon-container { display: none; background: white; border-radius: 0 0 15px 15px; padding: 20px; max-height: 400px; overflow-y: auto; }
+        .coupon-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .mini-coupon { border: 1px dashed var(--secondary); padding: 15px; border-radius: 10px; font-size: 0.85rem; background: #fff; transition: 0.2s; display: flex; align-items: center; justify-content: center; text-align: center; min-height: 50px; cursor: pointer; }
+        .mini-coupon.used { opacity: 0.6; text-decoration: line-through; background: #eee; cursor: default; }
+        .reset-btn { background: #95a5a6; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-top: 20px; cursor: pointer; font-size: 0.8rem; }
+
+        /* DİĞER */
+        .jar-container { font-size: 4rem; margin: 10px 0; animation: float 3s ease-in-out infinite; }
+        .love-note { display: none; background: #fffde7; padding: 20px; margin-top: 15px; border-radius: 2px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); font-family: 'Dancing Script', cursive; font-size: 1.5rem; color: #555; border: 1px solid #f0f0f0; position: relative; transform: rotate(-2deg); }
+        .love-note::before { content: ''; position: absolute; top: 0; right: 0; border-width: 0 20px 20px 0; border-style: solid; border-color: #eee #fff; }
+        .mood-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
+        .mood-btn { background: #f8f9fa; border: 1px solid #ddd; padding: 10px; border-radius: 10px; cursor: pointer; transition: 0.2s; font-size: 0.9rem; }
+        .prescription { display: none; margin-top: 15px; padding: 15px; background: #e3f2fd; border-radius: 10px; color: #1565c0; font-size: 0.9rem; border-left: 5px solid #1565c0; text-align: left; }
+        .whatsapp-btn { background-color: #25D366; color: white; text-decoration: none; display: flex; align-items: center; justify-content: center; padding: 15px; border-radius: 15px; margin-top: 40px; font-weight: 600; }
+        .ticker-wrap { position: fixed; bottom: 0; left: 0; width: 100%; height: 40px; background-color: var(--primary); z-index: 999; }
+        .ticker { display: inline-block; height: 40px; line-height: 40px; white-space: nowrap; animation: ticker 20s linear infinite; color: white; padding-left: 100%; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes popUp { 0% { transform: scale(0); } 70% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        @keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
+        @keyframes shake { 0% { transform: rotate(0deg); } 25% { transform: rotate(5deg); } 50% { transform: rotate(0deg); } 75% { transform: rotate(-5deg); } 100% { transform: rotate(0deg); } }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+    </style>
+</head>
+<body>
+    <div class="heart-bg" id="heart-bg"></div>
+    <div class="container">
+        <h1>Her Şey Geçer...</h1>
+        <p class="subtitle">Ama biz kalıcıyız ❤️</p>
+
+        <div class="timer-box">
+            <div style="font-size: 0.8rem; margin-bottom:5px; opacity:0.9; letter-spacing: 2px;">BİRLİKTELİĞİMİZ</div>
+            <div id="timer">
+                <div style="display:flex; flex-direction:column; align-items:center"><b id="days">0</b><span style="font-size:0.7rem">Gün</span></div> : 
+                <div style="display:flex; flex-direction:column; align-items:center"><b id="hours">0</b><span style="font-size:0.7rem">Saat</span></div> : 
+                <div style="display:flex; flex-direction:column; align-items:center"><b id="minutes">0</b><span style="font-size:0.7rem">Dk</span></div> : 
+                <div style="display:flex; flex-direction:column; align-items:center"><b id="seconds">0</b><span style="font-size:0.7rem">Sn</span></div>
+            </div>
+        </div>
+
+        <div class="box-style">
+            <h3 style="color:#d63384; margin:0;">💌 Seni Sevme Sebeplerim</h3>
+            <p style="font-size:0.8rem; color:#888;">Kavanozdan bir not çek...</p>
+            <div id="jar-icon" class="jar-container">🫙</div>
+            <div id="note-display" class="love-note"></div>
+            <button class="btn-main" onclick="pickReason()" style="background: linear-gradient(135deg, #f39c12, #e67e22);">Bir Not Çek ✨</button>
+        </div>
+
+        <div class="box-style">
+            <h3 style="color:#e67e22; margin:0;">🎨 Sanat Terapisi</h3>
+            <p style="font-size:0.8rem; color:#888;">İçini dök, çizimini yap ve bana at!</p>
+            <div class="drawing-controls">
+                <input type="color" id="colorPicker" style="width:40px; height:40px; border:none; padding:0; background:none;" value="#000000">
+                <div class="tool-btn active" id="penBtn" onclick="setTool('pen')"><i class="fas fa-pen"></i></div>
+                <div class="tool-btn" id="eraserBtn" onclick="setTool('eraser')"><i class="fas fa-eraser"></i></div>
+                <input type="range" id="brushSize" min="1" max="20" value="3" style="width:80px">
+            </div>
+            <div class="canvas-container"><canvas id="drawCanvas"></canvas></div>
+            <div style="margin-top:15px; display:flex; justify-content:center; gap:10px;">
+                <button class="btn-main" onclick="clearCanvas()" style="background:#95a5a6; font-size:0.9rem; margin:0;">Temizle</button>
+                <button class="btn-main" onclick="downloadDrawing()" style="background:#2ecc71; font-size:0.9rem; margin:0;">İndir</button>
+            </div>
+        </div>
+
+        <div class="box-style">
+            <h3 style="color:#3498db; margin:0;">🗺️ Bizim Haritamız</h3>
+            <p style="font-size:0.8rem; color:#888;">Gittiğimiz şehirlere tıklayıp kalp bırak! (Ortak Kayıt)</p>
+            <div id="map"></div>
+            <button class="btn-main" onclick="clearMap()" style="font-size:0.8rem; background:#7f8c8d; margin-top:10px;">Haritayı Temizle</button>
+        </div>
+
+        <div class="box-style">
+            <h3 style="color:var(--tech); margin:0;"><i class="fas fa-robot"></i> Cine-AI</h3>
+            <p style="font-size:0.8rem; color:#888;">Gemini 2.5 Flash ile Film Önerisi</p>
+            <p style="font-size:0.8rem; margin:10px 0 5px 0; font-weight:600; text-align:left;">1. Tür Seç:</p>
+            <div class="genre-grid">
+                <button class="genre-btn" onclick="selectGenre(this, 'Romantik')">💘 Romantik</button>
+                <button class="genre-btn" onclick="selectGenre(this, 'Komedi')">😂 Komedi</button>
+                <button class="genre-btn" onclick="selectGenre(this, 'Korku')">👻 Korku</button>
+                <button class="genre-btn" onclick="selectGenre(this, 'Bilim Kurgu')">👽 Bilim Kurgu</button>
+                <button class="genre-btn" onclick="selectGenre(this, 'Animasyon')">🦄 Animasyon</button>
+            </div>
+            <button class="expand-btn" onclick="toggleGenres()">Tüm Türleri Göster 👇</button>
+            <div id="all-genres" class="hidden-genres">
+                <div class="genre-grid">
+                    <button class="genre-btn" onclick="selectGenre(this, 'Aile')">👨‍👩‍👧‍👦 Aile</button>
+                    <button class="genre-btn" onclick="selectGenre(this, 'Aksiyon')">💥 Aksiyon</button>
+                    <button class="genre-btn" onclick="selectGenre(this, 'Belgesel')">🎥 Belgesel</button>
+                    <button class="genre-btn" onclick="selectGenre(this, 'Dram')">🎭 Dram</button>
+                    <button class="genre-btn" onclick="selectGenre(this, 'Fantastik')">🐉 Fantastik</button>
+                    <button class="genre-btn" onclick="selectGenre(this, 'Gerilim')">😬 Gerilim</button>
+                    <button class="genre-btn" onclick="selectGenre(this, 'Gizem')">🔍 Gizem</button>
+                    <button class="genre-btn" onclick="selectGenre(this, 'Macera')">🌍 Macera</button>
+                    <button class="genre-btn" onclick="selectGenre(this, 'Polisiye')">👮 Polisiye</button>
+                    <button class="genre-btn" onclick="selectGenre(this, 'Suç')">⚖️ Suç</button>
+                </div>
+            </div>
+            <p style="font-size:0.8rem; margin:15px 0 5px 0; font-weight:600; text-align:left;">2. Nasıl Hissediyorsun? (İsteğe Bağlı):</p>
+            <input type="text" id="user-feeling" class="ai-input" placeholder="Örn: Biraz hüzünlüyüm, ağlamak istiyorum...">
+            <button class="btn-main" style="background:var(--tech); width:100%; border-radius:15px;" onclick="askGeminiReal()">Bana Film Öner</button>
+            <div id="ai-result-box" class="ai-result-box"></div>
+        </div>
+
+        <div class="box-style">
+            <h3 style="color:var(--primary);">💊 Duygu Eczanesi</h3>
+            <div class="mood-grid">
+                <button class="mood-btn" onclick="prescribe('yorgun')">😓 Yorgun</button>
+                <button class="mood-btn" onclick="prescribe('uzgun')">😢 Üzgün</button>
+                <button class="mood-btn" onclick="prescribe('sinirli')">😡 Sinirli</button>
+                <button class="mood-btn" onclick="prescribe('ozledim')">🥺 Özledim</button>
+                <button class="mood-btn" onclick="prescribe('sikkin')">😑 Sıkkın</button>
+                <button class="mood-btn" onclick="prescribe('sevgi')">🥰 Sevgi</button>
+            </div>
+            <div id="prescription" class="prescription"></div>
+        </div>
+
+        <div style="margin: 30px 0;">
+            <button class="btn-main" style="background:#6c5ce7; width:100%; padding:15px; font-weight:bold;" onclick="toggleGameArea()">
+                <i class="fas fa-gamepad"></i> OYUN OYNA
+            </button>
+            
+            <div id="arcade-area" class="game-area">
+                <div class="game-menu">
+                    <button class="game-tab active" onclick="switchGame('memory')">🧠 Hafıza</button>
+                    <button class="game-tab" onclick="switchGame('xox')">⭕ XOX</button>
+                    <button class="game-tab" onclick="switchGame('duel')">🥊 Düello</button>
+                    <button class="game-tab" onclick="switchGame('catcher')">🎯 Avcı</button>
+                </div>
+                <div id="game-memory" class="single-game active">
+                    <div class="memory-grid" id="memory-grid"></div>
+                    <button class="btn-main" onclick="startMemory()">Yenile 🔄</button>
+                </div>
+                <div id="game-xox" class="single-game">
+                    <div style="margin-bottom:10px;">
+                        <button onclick="setXOXMode(true)" style="padding:5px 10px;">🤖 Bot</button> 
+                        <button onclick="setXOXMode(false)" style="padding:5px 10px;">👥 2 Kişi</button>
+                    </div>
+                    <div class="xox-board" id="xox-board"></div>
+                    <p id="xox-status" style="margin-top:10px; font-weight:bold;"></p>
+                    <button class="btn-main" onclick="startXOX()">Tekrar</button>
+                </div>
+                <div id="game-duel" class="single-game">
+                    <p style="font-size:0.8rem; margin-bottom:10px;">Hızlıca bas! 20 yapan kazanır.</p>
+                    <div class="duel-arena">
+                        <button class="duel-btn duel-p1" onclick="tapDuel(1)">KIRMIZI</button>
+                        <div class="duel-score"><span id="score1">0</span> - <span id="score2">0</span></div>
+                        <button class="duel-btn duel-p2" onclick="tapDuel(2)">MAVİ</button>
+                    </div>
+                    <button class="btn-main" onclick="resetDuel()" style="margin-top:10px;">Sıfırla</button>
+                </div>
+                <div id="game-catcher" class="single-game">
+                    <p>Skor: <b id="score">0</b></p>
+                    <div class="catcher-area" id="catcher-area">
+                        <button class="btn-main" onclick="startCatcher()" style="position:absolute; top:40%; left:30%;">BAŞLA ▶️</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="coupon-box-trigger" onclick="toggleCoupons()">🎁 30 Adet Kupon (Aç/Kapa)</button>
+        <div id="coupon-container" class="coupon-container">
+            <div class="coupon-grid" id="coupon-grid"></div>
+            <div style="text-align:center;">
+                <button class="reset-btn" onclick="resetCoupons()">🔄 Kuponları Sıfırla (Yeniden Başla)</button>
+            </div>
+        </div>
+
+        <a href="https://wa.me/905555555555?text=Aşkım%20moralim%20bozuk%20acil%20sarılmana%20ihtiyacım%20var%20🥺" class="whatsapp-btn" target="_blank">
+            <i class="fab fa-whatsapp"></i> Acil Durum Sarılma Butonu
+        </a>
+        <div class="signature"><p>Seni çok seven <b>[MAMI]</b> tarafından kodlandı ❤️</p></div>
+    </div>
+    
+    <div class="ticker-wrap"><div class="ticker">Seni Çok Seviyorum ❤️ Bugün harika bir gün olacak ☀️ Dünyanın en tatlı gülüşüne sahipsin 😊 Yanındayım 💪 Seni seviyorum! ❤️</div></div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+    <script>
+        // --- 1. FIREBASE & API AYARLARI ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAuryeEz2QmtfnbokrSvGWwPIWCMqXxti8",
+            authDomain: "ask-sitem.firebaseapp.com",
+            projectId: "ask-sitem",
+            storageBucket: "ask-sitem.firebasestorage.app",
+            messagingSenderId: "1093033362074",
+            appId: "1:1093033362074:web:ac33672c8221225e0a9523",
+            measurementId: "G-N0MY21Y05K"
+        };
+        const GEMINI_API_KEY = "AIzaSyAu4yCFxNYqEea1twMocJy4U5xTHUQMDaU";
+        
+        const startDate = new Date(2025, 9, 15);
+
+        // Firebase Başlat (Compat)
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // --- SAYAÇ ---
+        function updateTimer() {
+            const now = new Date(); const diff = now - startDate;
+            document.getElementById('days').innerText = Math.floor(diff / (86400000));
+            document.getElementById('hours').innerText = Math.floor((diff / 3600000) % 24);
+            document.getElementById('minutes').innerText = Math.floor((diff / 60000) % 60);
+            document.getElementById('seconds').innerText = Math.floor((diff / 1000) % 60);
+        }
+        setInterval(updateTimer, 1000);
+
+        // --- HARİTA (Firebase) ---
+        var map = L.map('map').setView([39.0, 35.0], 5);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+        
+        const heartsRef = db.ref('hearts');
+        heartsRef.on('value', (snapshot) => {
+            map.eachLayer((layer) => { if(layer instanceof L.Marker) { map.removeLayer(layer); } });
+            const data = snapshot.val();
+            if(data) {
+                Object.values(data).forEach(pos => {
+                    var heartIcon = L.divIcon({className: 'heart-marker', html: '❤️', iconSize: [30, 30]});
+                    L.marker([pos.lat, pos.lng], {icon: heartIcon}).addTo(map).bindPopup("<b>Burada bir anımız var!</b>");
+                });
+            }
+        });
+
+        map.on('click', function(e) {
+            heartsRef.push({lat: e.latlng.lat, lng: e.latlng.lng}).catch(error => {
+                alert("Hata: Firebase Kuralları (Rules) açık değil! Console'dan 'Rules' kısmını '.read': true, '.write': true yapmalısın.");
+            });
+        });
+
+        function clearMap() {
+            if(confirm("Tüm kalpleri silmek istediğine emin misin?")) {
+                heartsRef.set(null);
+            }
+        }
+
+        // --- KUPONLAR (Firebase) ---
+        const couponList = ["Masaj", "Film Seçimi", "Çikolata", "Susma Hakkı", "Yemek Ismarla", "Temizlik Muaf", "5dk Sarılma", "Kahve Yap", "Oje Sür", "Şarkı Söyle", "Oyun Gecesi", "Yatakta Kahvaltı", "Trip İzni", "Doğa Yürüyüşü", "10 Fotoğraf", "Prenses Hisset", "JOKER", "Şoförlük", "Alışveriş Eşlik", "Dondurma", "Kumanda Hakkı", "Ayak Masajı", "Saç Okşama", "Diyet Bozma", "Bulaşık (Ben)", "Uyku İzni", "Dans Et", "Şiir Oku", "Hayvan Videosu", "Seni Seviyorum De"];
+        const couponsRef = db.ref('coupons');
+
+        couponsRef.on('value', (snapshot) => {
+            const usedData = snapshot.val() || {};
+            const grid = document.getElementById('coupon-grid');
+            grid.innerHTML = "";
+            
+            couponList.forEach((text, index) => {
+                const div = document.createElement('div');
+                div.className = 'mini-coupon';
+                div.innerText = text;
+                if(usedData[index]) { div.classList.add('used'); }
+
+                div.onclick = function() {
+                    if(!this.classList.contains('used')) {
+                        if(confirm("Kuponu kullanmak istiyor musun? (" + text + ")")) {
+                            db.ref('coupons/' + index).set(true);
+                            alert("Kupon Kullanıldı!");
+                        }
+                    }
+                };
+                grid.appendChild(div);
+            });
+        });
+
+        function toggleCoupons() { const c = document.getElementById('coupon-container'); c.style.display = (c.style.display === 'block') ? 'none' : 'block'; }
+        function resetCoupons() { if(confirm("Tüm kuponları sıfırlamak istiyor musun?")) { couponsRef.set(null); } }
+
+        // --- CINE-AI ---
+        let selectedGenre = "";
+        function selectGenre(btn, genre) { document.querySelectorAll('.genre-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); selectedGenre = genre; }
+        function toggleGenres() { const div = document.getElementById('all-genres'); div.style.display = (div.style.display === 'block') ? 'none' : 'block'; }
+        
+        async function askGeminiReal() {
+            const display = document.getElementById('ai-result-box'); const userFeeling = document.getElementById('user-feeling').value;
+            if(selectedGenre === "") { alert("Lütfen önce bir tür seç!"); return; }
+            display.style.display = 'block'; display.innerHTML = "<span class='typing-effect'>🧠 Gemini Düşünüyor...</span>";
+            
+            const prompt = `Sevgilime film önereceğim. Tür: ${selectedGenre}. His: ${userFeeling}. Bana SADECE bir film öner. Asla sohbet etme. Format: [FILM_ADI]|[KONUSU]|[NEDEN_IZLEMELISIN]`;
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+                const data = await response.json();
+                if(data.candidates) {
+                    const rawText = data.candidates[0].content.parts[0].text;
+                    const parts = rawText.split('|');
+                    if(parts.length >= 3) {
+                        display.innerHTML = `<strong style='color:#74b9ff; font-size:1.2rem; display:block; margin-bottom:10px;'>🎬 ${parts[0]}</strong><span class='ai-tag'>📜 Konu:</span> ${parts[1]}<br><br><span class='ai-tag'>❤️ Neden:</span> ${parts[2]}`;
+                    } else { display.innerHTML = rawText; }
+                }
+            } catch(e) { display.innerHTML = "Hata: " + e.message; }
+        }
+
+        // --- KAVANOZ ---
+        const reasons = ["Gülüşünle günümü aydınlatıyorsun.","Bana her zaman güç veriyorsun.","Seninleyken zaman duruyor.","Gözlerinin içi gülüyor.","Sesin en sevdiğim melodi.","Beni her halimle seviyorsun.","Birlikte saçmalayabiliyoruz.","Dünyanın en iyi sarılanısın.","Varlığın huzur veriyor.","Seni her gördüğümde kalbim çarpıyor.","Benim en iyi arkadaşımsın.","Kötü günlerimde yanımdasın.","Birlikteyken çok eğleniyoruz.","Bana kendimi özel hissettiriyorsun.","Gelecek hayallerimin başrolüsün."];
+        function pickReason() {
+            const jar = document.getElementById('jar-icon'); const note = document.getElementById('note-display');
+            jar.style.animation = 'shake 0.5s'; setTimeout(() => { jar.style.animation = 'float 3s ease-in-out infinite'; }, 500);
+            const randomReason = reasons[Math.floor(Math.random() * reasons.length)];
+            note.style.display = 'block'; note.innerHTML = `✨ ${randomReason} ✨`;
+        }
+
+        // --- OYUN YÖNETİMİ ---
+        function toggleGameArea() { 
+            const area = document.getElementById('arcade-area'); 
+            if(area.style.display==='block'){ area.style.display='none'; }
+            else{ area.style.display='block'; startMemory(); area.scrollIntoView({behavior:'smooth'}); }
+        }
+        function switchGame(name) { 
+            document.querySelectorAll('.game-tab').forEach(t=>t.classList.remove('active')); event.target.classList.add('active'); 
+            document.querySelectorAll('.single-game').forEach(g => { g.classList.remove('active'); g.style.display = 'none'; }); 
+            const selected = document.getElementById('game-'+name);
+            selected.classList.add('active'); selected.style.display = 'block';
+            if(name==='memory') startMemory(); if(name==='xox') startXOX(); if(name==='duel') resetDuel();
+        }
+
+        // --- OYUNLAR ---
+        let score1 = 0; let score2 = 0;
+        function tapDuel(player) {
+            if(score1 >= 20 || score2 >= 20) return;
+            if(player === 1) score1++; else score2++;
+            document.getElementById('score1').innerText = score1; document.getElementById('score2').innerText = score2;
+            if(score1 >= 20) alert("🔴 KIRMIZI KAZANDI! 🏆"); if(score2 >= 20) alert("🔵 MAVİ KAZANDI! 🏆");
+        }
+        function resetDuel() { score1 = 0; score2 = 0; document.getElementById('score1').innerText=0; document.getElementById('score2').innerText=0; }
+
+        let score=0; let catcherInterval;
+        function startCatcher(){ 
+            score=0; document.getElementById('score').innerText=score; const area=document.getElementById('catcher-area'); area.innerHTML = '';
+            catcherInterval=setInterval(()=>{
+                const h=document.createElement('div'); h.classList.add('target-heart'); h.innerText='❤️'; 
+                h.style.left=Math.random()*(area.clientWidth-40)+'px'; h.style.top=Math.random()*(area.clientHeight-40)+'px'; 
+                h.onclick=function(){score++; document.getElementById('score').innerText=score; this.remove();}; 
+                area.appendChild(h); setTimeout(()=>h.remove(),1000);
+            },600); 
+            setTimeout(()=>{ clearInterval(catcherInterval); area.innerHTML='<p style="margin-top:120px; font-weight:bold; text-align:center;">Süre Doldu! Skor: '+score+'</p><button class="btn-main" onclick="startCatcher()" style="display:block; margin:10px auto;">Tekrar</button>'; },15000); 
+        }
+
+        const memEmojis = ['🐻','🐻','🌸','🌸','🍫','🍫','🦄','🦄','😻','😻','💍','💍','🎈','🎈','🌙','🌙'];
+        let hasFlippedCard=false; let lockBoard=false; let firstCard, secondCard; let matchedCount=0;
+        function startMemory(){ const grid=document.getElementById('memory-grid'); grid.innerHTML=''; matchedCount=0; lockBoard=false; hasFlippedCard=false; memEmojis.sort(()=>0.5-Math.random()); memEmojis.forEach(e=>{const c=document.createElement('div'); c.classList.add('card'); c.dataset.emoji=e; c.innerText=e; c.onclick=flipCard; grid.appendChild(c);}); }
+        function flipCard(){ if(lockBoard||this===firstCard)return; this.classList.add('flipped'); if(!hasFlippedCard){hasFlippedCard=true; firstCard=this; return;} secondCard=this; checkForMatch(); }
+        function checkForMatch(){let isMatch=firstCard.dataset.emoji===secondCard.dataset.emoji; isMatch?disableCards():unflipCards();}
+        function disableCards(){firstCard.onclick=null; secondCard.onclick=null; firstCard.classList.add('matched'); secondCard.classList.add('matched'); matchedCount+=2; resetBoard(); if(matchedCount===memEmojis.length)setTimeout(()=>alert("Tebrikler! 🎉"),500);}
+        function unflipCards(){lockBoard=true; setTimeout(()=>{firstCard.classList.remove('flipped'); secondCard.classList.remove('flipped'); resetBoard();},1000);}
+        function resetBoard(){[hasFlippedCard,lockBoard]=[false,false]; [firstCard,secondCard]=[null,null];}
+
+        let xoxBoard=['','','','','','','','','']; let gameActive=true; let isBotMode=true; let currentPlayer='X';
+        const winConditions=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+        function setXOXMode(bot) { isBotMode = bot; startXOX(); }
+        function startXOX(){ xoxBoard=['','','','','','','','','']; gameActive=true; currentPlayer='X'; const boardDiv=document.getElementById('xox-board'); boardDiv.innerHTML=''; document.getElementById('xox-status').innerText = isBotMode ? "Sen (X)" : "Sıra: X"; for(let i=0; i<9; i++){const c=document.createElement('div'); c.classList.add('xox-cell'); c.dataset.index=i; c.onclick=handleCellClick; boardDiv.appendChild(c);} }
+        function handleCellClick(){ const idx=this.dataset.index; if(xoxBoard[idx]!=='' || !gameActive) return; makeMove(this, idx, currentPlayer); if(checkResult()) return; if(isBotMode) { setTimeout(botMove, 500); } else { currentPlayer = currentPlayer === 'X' ? 'O' : 'X'; document.getElementById('xox-status').innerText = "Sıra: " + currentPlayer; } }
+        function makeMove(cell, idx, player) { xoxBoard[idx]=player; cell.innerText=player; cell.classList.add(player.toLowerCase()); }
+        function botMove(){ if(!gameActive) return; let emptyIdxs=xoxBoard.map((e,i)=>e===''?i:null).filter(e=>e!==null); if(emptyIdxs.length===0) return; const randIdx=emptyIdxs[Math.floor(Math.random()*emptyIdxs.length)]; const cells=document.querySelectorAll('.xox-cell'); makeMove(cells[randIdx], randIdx, 'O'); checkResult(); }
+        function checkResult(){ let roundWon=false; for(let i=0; i<=7; i++){ const [a,b,c]=winConditions[i]; if(xoxBoard[a]===''||xoxBoard[b]===''||xoxBoard[c]==='')continue; if(xoxBoard[a]===xoxBoard[b] && xoxBoard[b]===xoxBoard[c]){roundWon=true; break;} } if(roundWon){ document.getElementById('xox-status').innerText="Kazanan: "+currentPlayer+"! 🎉"; gameActive=false; return true; } if(!xoxBoard.includes('')){ document.getElementById('xox-status').innerText="Berabere! 🤝"; gameActive=false; return true; } return false; }
+
+        // --- ÇİZİM ---
+        const canvas = document.getElementById('drawCanvas'); const ctx = canvas.getContext('2d'); let painting = false; let isEraser = false;
+        function resizeCanvas() { const c = document.querySelector('.canvas-container'); canvas.width = c.offsetWidth; canvas.height = c.offsetHeight; }
+        window.addEventListener('resize', resizeCanvas); resizeCanvas();
+        const colorPicker = document.getElementById('colorPicker'); const brushSize = document.getElementById('brushSize');
+        function setTool(tool) { isEraser = (tool === 'eraser'); document.getElementById('penBtn').classList.toggle('active', !isEraser); document.getElementById('eraserBtn').classList.toggle('active', isEraser); }
+        function startPosition(e) { painting = true; draw(e); } function endPosition() { painting = false; ctx.beginPath(); }
+        function draw(e) { if (!painting) return; e.preventDefault(); const rect = canvas.getBoundingClientRect(); let x, y; if(e.type.includes('touch')) { x = e.touches[0].clientX - rect.left; y = e.touches[0].clientY - rect.top; } else { x = e.clientX - rect.left; y = e.clientY - rect.top; } ctx.lineWidth = brushSize.value; ctx.lineCap = 'round'; if (isEraser) { ctx.globalCompositeOperation = 'destination-out'; ctx.lineWidth = brushSize.value * 2; } else { ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = colorPicker.value; } ctx.lineTo(x, y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x, y); }
+        canvas.addEventListener('mousedown', startPosition); canvas.addEventListener('mouseup', endPosition); canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('touchstart', startPosition, {passive: false}); canvas.addEventListener('touchend', endPosition); canvas.addEventListener('touchmove', draw, {passive: false});
+        function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+        function downloadDrawing() { const link = document.createElement('a'); link.download = 'aşk-cizimim.png'; link.href = canvas.toDataURL(); link.click(); }
+
+        // --- DİĞER ---
+        function prescribe(mood) { const msgs = {yorgun:"Uyu dinlen 😴", uzgun:"Çikolata ye 🍫", sinirli:"Nefes al 😤", ozledim:"Fotoğraflara bak 📸", sikkin:"Oyun oyna 🎮", sevgi:"Ben de seni seviyorum! ❤️"}; document.getElementById('prescription').style.display='block'; document.getElementById('prescription').innerHTML = msgs[mood]; }
+    </script>
+</body>
+</html>
