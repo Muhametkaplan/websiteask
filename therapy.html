@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sanat Terapisi 🎨</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
@@ -23,13 +23,13 @@
     </div>
 
     <div class="navbar">
-        <a href="../index.html" class="nav-link"><i class="fas fa-home"></i></a>
+        <a href="index.html" class="nav-link"><i class="fas fa-home"></i></a>
         <a href="#" class="nav-link active"><i class="fas fa-paint-brush"></i></a>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <script src="../js/config.js"></script>
+    <script src="config.js"></script>
     <script>
         firebase.initializeApp(window.APP_CONFIG.FIREBASE);
         const db = firebase.database();
@@ -74,4 +74,5 @@
         db.ref('draw').on('value', s => { if(!s.val()) { ctx.clearRect(0,0,canvas.width, canvas.height); ctx.beginPath(); }});
     </script>
 </body>
+
 </html>
