@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sinemamız 🎬</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="style.css">
     <style>
         .movie-card { background: #ffebee; padding: 15px; border-radius: 15px; margin-top: 10px; display: flex; align-items: center; gap: 15px; border: 1px dashed #ef5350; text-align: left; position: relative; }
         .movie-icon { font-size: 2rem; color: #ef5350; }
@@ -26,13 +26,13 @@
     </div>
 
     <div class="navbar">
-        <a href="../index.html" class="nav-link"><i class="fas fa-home"></i></a>
+        <a href="index.html" class="nav-link"><i class="fas fa-home"></i></a>
         <a href="#" class="nav-link active"><i class="fas fa-film"></i></a>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <script src="../js/config.js"></script>
+    <script src="config.js"></script>
     <script>
         firebase.initializeApp(window.APP_CONFIG.FIREBASE);
         const db = firebase.database();
@@ -72,4 +72,5 @@
         function del(key) { if(confirm("Silinsin mi?")) db.ref('movies/'+key).remove(); }
     </script>
 </body>
+
 </html>
