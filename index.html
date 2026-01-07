@@ -22,7 +22,7 @@
 <body>
     <div class="container">
         <div class="timer-box">
-            <div style="font-size:0.8rem; opacity:0.9; margin-bottom:10px; letter-spacing: 2px;">BİRLİKTELİĞİMİZ</div>
+            <div style="font-size:0.8rem; opacity:0.9; margin-bottom:10px; letter-spacing: 2px;"><b>BİRLİKTELİĞİMİZ</b></div>
             <div id="timer">Yükleniyor...</div>
         </div>
 
@@ -50,7 +50,7 @@
         </div>
 
         <div class="box-style">
-            <h3 style="color:var(--tech);">🤖 Cine-AI</h3>
+            <h3 style="color:var(--tech);">🤖 Mami-AI</h3>
             <p style="font-size:0.8rem; color:#888;">Hangi tür film istersin?</p>
             
             <div class="genre-grid">
@@ -117,7 +117,7 @@
             const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
             const m = Math.floor((diff / (1000 * 60)) % 60);
             const s = Math.floor((diff / 1000) % 60);
-            document.getElementById('timer').innerHTML = `<div><b>${d}</b><span>Gün</span></div> : <div><b>${h}</b><span>Saat</span></div> : <div><b>${m}</b><span>Dk</span></div> : <div><b>${s}</b><span>Sn</span></div>`;
+            document.getElementById('timer').innerHTML = `<div>${d}<span></span></div> : <div>${h}<span></span></div> : <div>${m}<span></span></div> : <div>${s}<span></span></div>`;
         }
         setInterval(updateFullTimer, 1000); updateFullTimer();
 
@@ -157,3 +157,4 @@
     </script>
 </body>
 </html>
+
