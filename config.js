@@ -9,6 +9,7 @@ window.APP_CONFIG = {
         appId: "1:1093033362074:web:ac33672c8221225e0a9523",
         measurementId: "G-N0MY21Y05K"
     },
-    GEMINI_KEY: "AIzaSyAu4yCFxNYqEea1twMocJy4U5xTHUQMDaU",
+    GEMINI_KEY: "AIzaSyD_afLeGZHfKmncAyYitLSUUCTw3ICOasA",
     START_DATE: new Date(2025, 9, 15) // Tarihini buraya gir
+
 };
